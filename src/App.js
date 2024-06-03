@@ -34,25 +34,22 @@ function App() {
   const [score, setScore] = useState(0);
 
 
-  const pickWordAndCategory = () => {
+  const pickWordAndCategory = useCallback (() => {
     const categories = Object.keys(words);
     const category = categories[Math.floor(Math.random() * Object.keys(categories).length)];
-
-    console.log(category);
-
     const word = words[category][Math.floor(Math.random() * words[category].length)]
 
-    console.log(word);
-
     return { word, category} ;
-  };
+  }, [words]);
 
-  const startGame = () => {
+  const startGame = useCallback ( () => {
+
+    clearLetterStates();
+
     // pick word and pick category
     const { word, category } = pickWordAndCategory();
 
     let wordLetters = word.split("");
-
     wordLetters = wordLetters.map((letter) => letter.toLowerCase());
     
     // fill states
@@ -61,7 +58,7 @@ function App() {
     setLetters(wordLetters);
 
     setGameStage(stages[1].name);
-  };
+  }, [pickWordAndCategory]);
 
   // process the letter input
   const verifyLetter = (letter) => {
@@ -95,6 +92,16 @@ function App() {
     }
   }, [guesses]); 
 
+  useEffect( () => {
+    const uniqueLetters = [...new Set(letters)];
+
+    // win condition
+    if (guessedLetters.length === uniqueLetters.length) {
+      setScore( (actualScore) => actualScore += 100);
+      startGame();
+    };
+  }, [guessedLetters, letters, startGame]);
+
   const retry = () => {
     setScore(0);
     setGuesses(guessesQty);
@@ -116,7 +123,7 @@ function App() {
           score={score}
         /> 
       )}
-      {gameStage ==='end' && <GameOver retry={retry} />}
+      {gameStage ==='end' && <GameOver retry={retry} score={score}/>}
      
     </div>
   );
